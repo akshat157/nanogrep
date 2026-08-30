@@ -1,4 +1,6 @@
-use std::{env, fs, process};
+use std::{env, error::Error, fs, process};
+
+use nanogrep::search;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -8,17 +10,24 @@ fn main() {
         process::exit(1);
     });
 
-    println!("Searching for `{}`", config.query);
-    println!("In the file `{}`", config.file_path);
-
-    run(config);
+    // Don't need unwrap_or_else() here since we're only concerned
+    // with one of the cases of Result<T, E>, i.e. the Error case here.
+    if let Err(e) = run(config) {
+        println!("App error: {e}");
+        process::exit(1)
+    }
 }
 
-fn run(config: Config) {
-    let file_text =
-        fs::read_to_string(config.file_path).expect("Should've been able to read the file.");
+fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let file_text = fs::read_to_string(config.file_path)?;
 
-    println!("Text read from file:\n\n{file_text}");
+    let results = search(&config.query, &file_text);
+
+    for line in results {
+        println!("{line}");
+    }
+
+    Ok(())
 }
 
 struct Config {
