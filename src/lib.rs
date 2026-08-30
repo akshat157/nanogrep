@@ -48,4 +48,18 @@ and everything.";
             search(query, file_text)
         );
     }
+
+    #[test]
+    fn non_match() {
+        let query = "banana";
+        let file_text = "\
+Let's build a new spaceship
+A spaceship to fly to the
+other side of the universe.
+A spaceship that travels at
+the speed of light.";
+
+        let expected: Vec<&str> = Vec::new();
+        assert_eq!(expected, search(query, file_text))
+    }
 }
