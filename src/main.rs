@@ -6,14 +6,14 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let config = Config::build(&args).unwrap_or_else(|err| {
-        println!("Problem occured while parsing arguments: {err}");
+        eprintln!("Problem occured while parsing arguments: {err}");
         process::exit(1);
     });
 
     // Don't need unwrap_or_else() here since we're only concerned
     // with one of the cases of Result<T, E>, i.e. the Error case here.
     if let Err(e) = run(config) {
-        println!("App error: {e}");
+        eprintln!("Application error: {e}");
         process::exit(1)
     }
 }
