@@ -1,6 +1,6 @@
 use std::{env, error::Error, fs, process};
 
-use nanogrep::search;
+use nanogrep::{search, search_case_insensitive};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -21,7 +21,11 @@ fn main() {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let file_text = fs::read_to_string(config.file_path)?;
 
-    let results = search(&config.query, &file_text);
+    let results = if config.ignore_case {
+        search_case_insensitive(&config.query, &file_text)
+    } else {
+        search(&config.query, &file_text)
+    };
 
     for line in results {
         println!("{line}");
@@ -33,19 +37,26 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
 struct Config {
     query: String,
     file_path: String,
+    ignore_case: bool,
 }
 
 impl Config {
     fn build(args: &[String]) -> Result<Config, &'static str> {
-        // Temporary workaround for avoiding the borrow checker.
-        // TODO: Optimize later.
         if args.len() < 3 {
             return Err("Not enough arguments provided!");
         }
 
+        // Using .clone() here is a temporary workaround
+        // to avoid the borrow checking.
+        // TODO: Optimize later.
         let query = args[1].clone();
         let file_path = args[2].clone();
+        let ignore_case = env::var("IGNORE_CASE").is_ok();
 
-        Ok(Config { query, file_path })
+        Ok(Config {
+            query,
+            file_path,
+            ignore_case,
+        })
     }
 }
