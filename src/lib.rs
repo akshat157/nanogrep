@@ -1,3 +1,51 @@
+use std::{env, error::Error, fs};
+
+pub struct Config {
+    query: String,
+    file_path: String,
+    ignore_case: bool,
+}
+
+impl Config {
+    pub fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        // Ignore the first value
+        args.next();
+
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("query string not provided!"),
+        };
+        let file_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("file path not provided!"),
+        };
+
+        let ignore_case = env::var("IGNORE_CASE").is_ok();
+
+        Ok(Config {
+            query,
+            file_path,
+            ignore_case,
+        })
+    }
+}
+
+pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let file_text = fs::read_to_string(config.file_path)?;
+
+    if config.ignore_case {
+        for line in search_case_insensitive(&config.query, &file_text) {
+            println!("{line}");
+        }
+    } else {
+        for line in search(&config.query, &file_text) {
+            println!("{line}");
+        }
+    }
+
+    Ok(())
+}
+
 pub fn search<'a>(query: &str, file_text: &'a str) -> impl Iterator<Item = &'a str> {
     file_text.lines().filter(move |line| line.contains(query))
 }
