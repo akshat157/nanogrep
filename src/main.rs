@@ -3,9 +3,7 @@ use std::{env, error::Error, fs, process};
 use nanogrep::{search, search_case_insensitive};
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    let config = Config::build(&args).unwrap_or_else(|err| {
+    let config = Config::build(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem occured while parsing arguments: {err}");
         process::exit(1);
     });
@@ -41,16 +39,19 @@ struct Config {
 }
 
 impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("Not enough arguments provided!");
-        }
+    fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        // Ignore the first value
+        args.next();
 
-        // Using .clone() here is a temporary workaround
-        // to avoid the borrow checking.
-        // TODO: Optimize later.
-        let query = args[1].clone();
-        let file_path = args[2].clone();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("query string not provided!"),
+        };
+        let file_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("file path not provided!"),
+        };
+
         let ignore_case = env::var("IGNORE_CASE").is_ok();
 
         Ok(Config {
