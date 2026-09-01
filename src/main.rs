@@ -19,14 +19,14 @@ fn main() {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let file_text = fs::read_to_string(config.file_path)?;
 
-    let results = if config.ignore_case {
-        search_case_insensitive(&config.query, &file_text)
+    if config.ignore_case {
+        for line in search_case_insensitive(&config.query, &file_text) {
+            println!("{line}");
+        }
     } else {
-        search(&config.query, &file_text)
-    };
-
-    for line in results {
-        println!("{line}");
+        for line in search(&config.query, &file_text) {
+            println!("{line}");
+        }
     }
 
     Ok(())

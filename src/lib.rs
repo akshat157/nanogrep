@@ -1,23 +1,15 @@
-pub fn search<'a>(query: &str, file_text: &'a str) -> Vec<&'a str> {
-    let mut results = Vec::new();
-    for line in file_text.lines() {
-        if line.contains(query) {
-            results.push(line);
-        }
-    }
-    results
+pub fn search<'a>(query: &str, file_text: &'a str) -> impl Iterator<Item = &'a str> {
+    file_text.lines().filter(move |line| line.contains(query))
 }
 
-pub fn search_case_insensitive<'a>(query: &str, file_text: &'a str) -> Vec<&'a str> {
+pub fn search_case_insensitive<'a>(
+    query: &str,
+    file_text: &'a str,
+) -> impl Iterator<Item = &'a str> {
     let query = query.to_lowercase();
-    let mut results = Vec::new();
-
-    for line in file_text.lines() {
-        if line.to_lowercase().contains(&query) {
-            results.push(line);
-        }
-    }
-    results
+    file_text
+        .lines()
+        .filter(move |line| line.to_lowercase().contains(&query))
 }
 
 #[cfg(test)]
@@ -32,7 +24,8 @@ Rust:
 safe, fast, productive.
 Pick three.";
 
-        assert_eq!(vec!["safe, fast, productive."], search(query, file_text));
+        let actual: Vec<_> = search(query, file_text).collect();
+        assert_eq!(vec!["safe, fast, productive."], actual);
     }
 
     #[test]
@@ -50,13 +43,14 @@ On the quest of finding the
 answer to life, universe
 and everything.";
 
+        let actual: Vec<_> = search(query, file_text).collect();
         assert_eq!(
             vec![
                 "Let's build a new spaceship",
                 "A spaceship to fly to the",
                 "spaceship that can help us",
             ],
-            search(query, file_text)
+            actual
         );
     }
 
@@ -69,7 +63,8 @@ A spaceship to fly to the
 other side of the universe.";
 
         let expected: Vec<&str> = Vec::new();
-        assert_eq!(expected, search(query, file_text))
+        let actual: Vec<_> = search(query, file_text).collect();
+        assert_eq!(expected, actual);
     }
 
     #[test]
@@ -82,10 +77,8 @@ of the universe.
 Spaceship that travels at
 the speed of light.";
 
-        assert_eq!(
-            vec!["Let's build a new spaceship"],
-            search(query, file_text)
-        );
+        let actual: Vec<_> = search(query, file_text).collect();
+        assert_eq!(vec!["Let's build a new spaceship"], actual);
     }
 
     #[test]
@@ -99,6 +92,7 @@ What do you mean?
 Spaceship is due.
 Hatching, cracking...";
 
+        let actual: Vec<_> = search_case_insensitive(query, file_text).collect();
         assert_eq!(
             vec![
                 "Hate? No hate!",
@@ -106,7 +100,7 @@ Hatching, cracking...";
                 "What do you mean?",
                 "Hatching, cracking..."
             ],
-            search_case_insensitive(query, file_text)
+            actual
         );
     }
 }
